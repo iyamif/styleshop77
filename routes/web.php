@@ -35,6 +35,8 @@ Route::controller(ClientController::class)->group(function(){
     Route::post('/delete-cart', 'deleteCart')->name('clientDeleteCart');
     Route::get('/checkout', 'checkout')->name('clientCheckout');
     Route::post('/checkout-save', 'checkoutSave')->name('clientCheckoutSave');
+    Route::get('/order/payment', 'orderPayment')->name('orderPayment');
+    Route::post('/order-payment-bypass', 'orderSaveBypass')->name('orderSaveBypass');
     Route::get('/success/{order_code}', 'successOrder')->name('clientOrderCode');
     Route::get('/check-order', 'checkOrder')->name('clientCheckOrder');
     Route::post('/check-order-status', 'checkOrderStatus')->name('clientCheckOrderStatus');

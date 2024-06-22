@@ -195,6 +195,61 @@ class ClientController extends Controller
         }
     }
 
+    public function orderPayment(Request $request){
+        return view('client.order-payment');
+    }    
+    public function orderSaveBypass(Request $request){
+        
+        try{
+            $order_code = Str::random(3).'-'.Date('Ymd');
+            DB::beginTransaction();                                      
+
+            $order = Order::create([
+                'shop_id' => Shop::first()->id,
+                'order_code' => $order_code,
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'address' => 'Jalan Dummy',
+                'note' => 'Lorem Ipsum',
+                'total' => $request->total_price,
+                'status' => 0,
+                'status_payment' => 'Unpaid'
+            ]);
+
+
+                // Set your Merchant Server Key
+                \Midtrans\Config::$serverKey = config('midtrans.server_key');
+                // Set to Development/Sandbox Environment (default). Set to true for Production Environment (accept real transaction).
+                \Midtrans\Config::$isProduction = config('midtrans.is_production');
+                // Set sanitization on (default)
+                \Midtrans\Config::$isSanitized = true;
+                // Set 3DS transaction for credit card to true
+                \Midtrans\Config::$is3ds = true;  
+
+            $params = array(
+                'transaction_details' => array(
+                    'order_id' => $order_code,
+                    'gross_amount' =>$request->total_price,
+                ),
+                'customer_details' => array(
+                    'first_name' => $request->name,
+                    'last_name' => null,
+                    'phone' => $request->phone
+                ),
+            );
+
+            $snapToken = \Midtrans\Snap::getSnapToken($params);
+            DB::commit();
+
+            return view('client.checkout-payment', compact('snapToken', 'order'));
+
+            // return redirect()->route('clientOrderCode', $order_code);
+        }catch(Exception $e){
+            DB::rollBack();
+            return redirect('/');
+        }   
+    }
+
     public function callback(Request $request){
         $serverKey = config('midtrans.server_key');
         $hashed = hash("sha512", $request->order_id.$request->status_code.$request->gross_amount.$serverKey);
