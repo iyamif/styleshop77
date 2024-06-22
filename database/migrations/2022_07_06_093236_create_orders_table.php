@@ -23,6 +23,7 @@ return new class extends Migration
             $table->text('note')->nullable();
             $table->bigInteger('total');
             $table->integer('status');
+            $table->text('status_payment');
 
             $table->foreign('shop_id')->references('id')->on('shops')->onUpdate('cascade')->onDelete('cascade');
 
