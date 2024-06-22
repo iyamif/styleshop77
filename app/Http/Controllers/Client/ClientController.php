@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use Validator;
 use Str;
+use DB;
 
 class ClientController extends Controller
 {
@@ -126,36 +127,83 @@ class ClientController extends Controller
             $order_code = Str::random(3).'-'.Date('Ymd');
 
             if(session('cart')){
-                $total = 0;
-                foreach((array) session('cart') as $id => $details){
-                    $total += $details['price'] * $details['quantity'];
+                try{
+                    DB::beginTransaction();                                      
 
-                    $data[$id] = [
+                    $total = 0;
+                    foreach((array) session('cart') as $id => $details){
+                        $total += $details['price'] * $details['quantity'];
+    
+                        $data[$id] = [
+                            'order_code' => $order_code,
+                            'title' => $details['title'],
+                            'price' => $details['price'],
+                            'quantity' => $details['quantity'],
+                        ];
+                    }
+    
+                    $order = Order::create([
+                        'shop_id' => Shop::first()->id,
                         'order_code' => $order_code,
-                        'title' => $details['title'],
-                        'price' => $details['price'],
-                        'quantity' => $details['quantity'],
-                    ];
+                        'name' => $request->name,
+                        'phone' => $request->phone,
+                        'address' => $request->address,
+                        'note' => $request->note,
+                        'total' => $total,
+                        'status' => 0
+                    ]);
+    
+                    OrderDetail::insert($data);
+    
+                    session()->forget('cart');
+
+                     // Set your Merchant Server Key
+                     \Midtrans\Config::$serverKey = config('midtrans.server_key');
+                     // Set to Development/Sandbox Environment (default). Set to true for Production Environment (accept real transaction).
+                     \Midtrans\Config::$isProduction = config('midtrans.is_production');
+                     // Set sanitization on (default)
+                     \Midtrans\Config::$isSanitized = true;
+                     // Set 3DS transaction for credit card to true
+                     \Midtrans\Config::$is3ds = true;  
+
+                    $params = array(
+                        'transaction_details' => array(
+                            'order_id' => $order_code,
+                            'gross_amount' =>$total,
+                        ),
+                        'customer_details' => array(
+                            'first_name' => $request->name,
+                            'last_name' => null,
+                            'phone' => $request->phone
+                        ),
+                    );
+
+                    $snapToken = \Midtrans\Snap::getSnapToken($params);
+                    DB::commit();
+
+                    return view('client.checkout-payment', compact('snapToken', 'order'));
+        
+                    // return redirect()->route('clientOrderCode', $order_code);
+                }catch(Exception $e){
+                    DB::rollBack();
+                    return redirect('/');
                 }
-
-                Order::create([
-                    'shop_id' => Shop::first()->id,
-                    'order_code' => $order_code,
-                    'name' => $request->name,
-                    'phone' => $request->phone,
-                    'address' => $request->address,
-                    'note' => $request->note,
-                    'total' => $total,
-                    'status' => 0
-                ]);
-
-                OrderDetail::insert($data);
-
-                session()->forget('cart');
-
-                return redirect()->route('clientOrderCode', $order_code);
+                
             }
 
+        }
+    }
+
+    public function callback(Request $request){
+        $serverKey = config('midtrans.server_key');
+        $hashed = hash("sha512", $request->order_code.$request->status_code.$request->gross_amount.$serverKey);
+        if($hashed == $request->signature_key){
+            if($request->transaction_status == 'capture' || $request->transaction_status == 'settlement'){
+                $order = Order::where('order_code', $request->order_code)->first();
+                $order_code = $request->order_code;
+                $order->update(['status' => 'Paid']);
+                return redirect()->route('clientOrderCode', $order_code);
+            }
         }
     }
 
