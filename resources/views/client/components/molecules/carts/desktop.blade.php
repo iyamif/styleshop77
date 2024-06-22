@@ -20,7 +20,7 @@
                     {!! str_replace('-', ' ', ucwords($details['title'])) !!} 
                 </td>
                 <td>
-                    ${{$details['price']}}
+                    Rp {{$details['price']}}
                 </td>
                 <td>
                     @if(request()->routeIs('clientCheckout'))
@@ -33,7 +33,7 @@
                         </div>
                     @endif
                 </td>
-                <td>$<span class="product-subtotal" data-subtotal="{{ $details['price'] * $details['quantity'] }}">{{ $details['price'] * $details['quantity']}}</span></td>
+                <td>Rp <span class="product-subtotal" data-subtotal="{{ $details['price'] * $details['quantity'] }}">{{ $details['price'] * $details['quantity']}}</span></td>
                 @if(!request()->routeIs('clientCheckout'))
                     <td class="actions">
                         <button class="btn btn-danger btn-sm remove-from-cart" data-id="{{ $id }}" onclick="deleteItem({{ $id }}, $(this), 'desktop')"><i class="bi bi-trash"></i></button>
@@ -56,7 +56,7 @@
             </td>
             <td colspan="2" class="hidden-xs"></td>
             <td class="hidden-xs">
-                <strong>Total : $<span class="cart-total">{{ $total }}</span></strong>
+                <strong>Total : Rp <span class="cart-total">{{ $total }}</span></strong>
             </td>
             @if(!request()->routeIs('clientCheckout'))
                 <td>

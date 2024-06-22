@@ -26,7 +26,7 @@
 <div>
     <h3 class="mt-md-0 mt-4">{!! str_replace('-', ' ', ucwords($dataProductContent->title)) !!}</h3>
     <hr/>
-    <h5>${{$dataProductContent->price}}</h5>
+    <h5>Rp {{$dataProductContent->price}}</h5>
     <p>Category : <a href="{{ route('clientCategoryProducts', $dataProductContent->category->name) }}">{!! str_replace('-', ' ', ucwords($dataProductContent->category->name)) !!}</a></p>
     <p><b>Description</b></p>
     <div class="form-group">
