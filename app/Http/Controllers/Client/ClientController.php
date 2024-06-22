@@ -150,7 +150,8 @@ class ClientController extends Controller
                         'address' => $request->address,
                         'note' => $request->note,
                         'total' => $total,
-                        'status' => 0
+                        'status' => 0,
+                        'status_payment' => 'Unpaid'
                     ]);
     
                     OrderDetail::insert($data);
@@ -201,7 +202,7 @@ class ClientController extends Controller
             if($request->transaction_status == 'capture' || $request->transaction_status == 'settlement'){
                 $order = Order::where('order_code', $request->order_code)->first();
                 $order_code = $request->order_code;
-                $order->update(['status' => 'Paid']);
+                $order->update(['status_payment' => 'Paid']);
                 return redirect()->route('clientOrderCode', $order_code);
             }
         }
