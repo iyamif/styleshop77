@@ -1,5 +1,5 @@
 <div class="container py-4">
-    <form action="{{ route('clientCheckoutSave') }}" method="post">
+    <form id="orderForm" action="{{ route('clientCheckoutSave') }}" method="post">
         @csrf
         <div class="form-group">
             <label for="name">Name</label>
@@ -31,7 +31,7 @@
                 </span>
             @enderror
         </div>
-        <button type="submit" class="btn btn-primary float-end">Order</button>
+        <button  type="button" id="checkoutButton" class="btn btn-primary float-end">Order</button>
     </form>
 </div>
 @push('js')
@@ -56,6 +56,10 @@
                 $text.css('height', $text[0].scrollHeight+'px');
             }
         }
+
+        document.getElementById('checkoutButton').addEventListener('click', function() {
+            document.getElementById('orderForm').submit();
+        });
 
     </script>
 @endpush
