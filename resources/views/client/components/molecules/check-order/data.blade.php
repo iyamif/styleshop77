@@ -33,12 +33,12 @@
                         <tr>
                             <td><b>Order Code</b></td>
                             <td>&nbsp; : &nbsp;</td>
-                            <td><b><u>${{ $order->order_code }}</u></b></td>
+                            <td><b><u>{{ $order->order_code }}</u></b></td>
                         </tr>
                         <tr>
                             <td><b>Total</b></td>
                             <td>&nbsp; : &nbsp;</td>
-                            <td><b><u>${{ $order->total }}</u></b></td>
+                            <td><b><u>Rp {{ $order->total }}</u></b></td>
                         </tr>
                         <tr>
                             <td><b>Name</b></td>
@@ -80,9 +80,9 @@
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{!! str_replace('-', ' ', ucwords($item->title)) !!}</td>
-                                <td>${{ $item->price }}</td>
+                                <td>Rp {{ $item->price }}</td>
                                 <td>{{ $item->quantity }}</td>
-                                <td>${!! $item->price * $item->quantity !!}</td>
+                                <td>Rp {!! $item->price * $item->quantity !!}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -98,11 +98,11 @@
                                         </div>
                                         <div class="col-6">
                                             <label for="">Price</label>
-                                            <p class="font-bold">${{ $row->price }}</p>
+                                            <p class="font-bold">Rp {{ $row->price }}</p>
                                         </div>
                                         <div class="col-6">
                                             <label for="">Sub Total</label>
-                                            <p class="font-bold">${!! $row->price * $row->quantity !!}</p>
+                                            <p class="font-bold">Rp {!! $row->price * $row->quantity !!}</p>
                                         </div>
                                         <div class="col-12">
                                             <label for="">Quantity</label>
