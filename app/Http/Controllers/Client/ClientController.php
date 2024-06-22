@@ -197,11 +197,11 @@ class ClientController extends Controller
 
     public function callback(Request $request){
         $serverKey = config('midtrans.server_key');
-        $hashed = hash("sha512", $request->order_code.$request->status_code.$request->gross_amount.$serverKey);
+        $hashed = hash("sha512", $request->order_id.$request->status_code.$request->gross_amount.$serverKey);
         if($hashed == $request->signature_key){
             if($request->transaction_status == 'capture' || $request->transaction_status == 'settlement'){
-                $order = Order::where('order_code', $request->order_code)->first();
-                $order_code = $request->order_code;
+                $order = Order::where('order_code', $request->order_id)->first();
+                $order_code = $request->order_id;
                 $order->update(['status_payment' => 'Paid']);
                 return redirect()->route('clientOrderCode', $order_code);
             }
