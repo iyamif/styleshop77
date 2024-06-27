@@ -1,4 +1,4 @@
-<x-template.layout title="{{ $title }}" >
+{{-- <x-template.layout title="{{ $title }}" >
   <x-organisms.navbar :path="$shop->path"/>
     <div class="container py-y d-flex flex-column align-items-center gap-3">
       <img src="{{ asset('client/img/success-order.png') }}" class="border rounded rounded-3" style="width:40%;height:auto;">
@@ -10,4 +10,14 @@
       <a href="{{ route('clientCheckOrder') }}" class="btn btn-primary">Check Order Now</a>
     </div>
   <x-organisms.footer :shop="$shop"/>
+</x-template.layout> --}}
+
+<x-template.layout title="{{ $title }}" >
+    <div class="container py-y d-flex flex-column align-items-center gap-3">
+      <img src="{{ asset('client/img/success-order.png') }}" class="border rounded rounded-3" style="width:40%;height:auto;">
+      <div class="text-center">
+        <h4>Thank you so much for your order</h4>
+        <p>Order Code : <u><b class="text-danger">{{ $order_code }}</b></u></p>
+      </div>
+    </div>
 </x-template.layout>
