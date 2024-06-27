@@ -195,9 +195,65 @@ class ClientController extends Controller
         }
     }
 
+    //bypass
     public function orderPayment(Request $request){
-        return view('client.order-payment');
-    }    
+        $name = $request->name;
+        $phone = $request->phone;
+        $total_price = $request->total_price;
+        return view('client.order-payment',compact('name', 'phone','total_price'));
+    }
+
+    public function saveOrder(Request $request){
+        try{
+            $order_code = Str::random(3).'-'.Date('Ymd');
+            DB::beginTransaction();                                      
+
+            $order = Order::create([
+                'shop_id' => Shop::first()->id,
+                'order_code' => $order_code,
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'address' => 'Jalan Dummy',
+                'note' => 'Lorem Ipsum',
+                'total' => $request->total_price,
+                'status' => 0,
+                'status_payment' => 'Unpaid'
+            ]);
+
+
+                // Set your Merchant Server Key
+                \Midtrans\Config::$serverKey = config('midtrans.server_key');
+                // Set to Development/Sandbox Environment (default). Set to true for Production Environment (accept real transaction).
+                \Midtrans\Config::$isProduction = config('midtrans.is_production');
+                // Set sanitization on (default)
+                \Midtrans\Config::$isSanitized = true;
+                // Set 3DS transaction for credit card to true
+                \Midtrans\Config::$is3ds = true;  
+
+            $params = array(
+                'transaction_details' => array(
+                    'order_id' => $order_code,
+                    'gross_amount' =>$request->total_price,
+                ),
+                'customer_details' => array(
+                    'first_name' => $request->name,
+                    'last_name' => null,
+                    'phone' => $request->phone
+                ),
+            );
+
+            $snapToken = \Midtrans\Snap::getSnapToken($params);
+            DB::commit();
+
+            return response()->json(['status' => 'success', 'order_code'=>$order_code, 'token' => $snapToken],200);
+
+            // return redirect()->route('clientOrderCode', $order_code);
+        }catch(Exception $e){
+            DB::rollBack();
+            return response()->json(['status' => 'failed'],500);
+        }   
+    }
+    
     public function orderSaveBypass(Request $request){
         
         try{
@@ -258,7 +314,12 @@ class ClientController extends Controller
                 $order = Order::where('order_code', $request->order_id)->first();
                 $order_code = $request->order_id;
                 $order->update(['status_payment' => 'Paid']);
-                return redirect()->route('clientOrderCode', $order_code);
+                $data = [
+                    'shop' => Shop::first(),
+                    'order_code' => $order_code,
+                    'title' => 'Checkout'
+                ];
+                return view('client.success-order', $data);
             }
         }
     }
