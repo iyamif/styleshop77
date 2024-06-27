@@ -8,6 +8,10 @@
     <title>Payment</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    {{-- <script type="text/javascript" src="https://app.midtrans.com/snap/snap.js" data-client-key="SET_YOUR_CLIENT_KEY_HERE">
+        </script> --}}
+    <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key="SET_YOUR_CLIENT_KEY_HERE"></script>
     <style>
         body {
             background-color: #f8f9fa;
@@ -22,7 +26,8 @@
             border: none;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-            border-radius: 15px; /* Menggunakan border-radius untuk membuat card tidak kotak */
+            border-radius: 15px;
+            /* Menggunakan border-radius untuk membuat card tidak kotak */
         }
 
         .card:hover {
@@ -46,7 +51,8 @@
         .btn-primary {
             background-color: #ff6f61;
             border-color: #ff6f61;
-            border-radius: 20px; /* Menggunakan border-radius pada tombol */
+            border-radius: 20px;
+            /* Menggunakan border-radius pada tombol */
         }
 
         .btn-primary:hover {
@@ -90,12 +96,12 @@
                             <div class="mb-3">
                                 <label for="name" class="form-label">Nama Pelanggan</label>
                                 <input type="text" name="name" class="form-control" id="name"
-                                    placeholder="Masukkan nama anda!" required>
+                                    placeholder="Masukkan nama anda!" value="{{ $name }}" required>
                             </div>
                             <div class="mb-3">
                                 <label for="phone" class="form-label">No Telp</label>
                                 <input type="text" name="phone" class="form-control" id="phone"
-                                    placeholder="Masukkan no hp!" required>
+                                    placeholder="Masukkan no hp!" value="{{ $phone }}" required>
                             </div>
                             {{-- <div class="mb-3">
                                 <label for="address" class="form-label">Alamat</label>
@@ -105,8 +111,9 @@
                             <div class="mb-3">
                                 <label for="total_price" class="form-label">Total Pembayaran</label>
                                 <input type="text" name="total_price" class="form-control" id="total_price"
-                                    placeholder="Masukkan Jumlah Pembayaran!" required>
+                                    placeholder="Masukkan Jumlah Pembayaran!" value="{{ $total_price }}" required>
                             </div>
+                            <input type="text" id="snap-token" hidden>
                             <button type="button" class="btn btn-primary w-100" id="checkoutButton">Checkout</button>
                         </form>
                     </div>
@@ -145,8 +152,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
     </script>
+    <script src="{{ asset('assets/vendors/jquery/jquery.min.js') }}"></script>
     <script>
-        document.getElementById('checkoutButton').addEventListener('click', function () {
+        document.getElementById('checkoutButton').addEventListener('click', function() {
             let isValid = true;
 
             // Validate each input field
@@ -163,21 +171,65 @@
 
             if (isValid) {
                 document.getElementById('confirmName').innerText = 'Nama: ' + document.getElementById('name').value;
-                document.getElementById('confirmPhone').innerText = 'No Telp: ' + document.getElementById('phone').value;
+                document.getElementById('confirmPhone').innerText = 'No Telp: ' + document.getElementById('phone')
+                    .value;
                 // document.getElementById('confirmAddress').innerText = 'Alamat: ' + document.getElementById('address').value;
-                document.getElementById('confirmTotalPrice').innerText = 'Jumlah Pembayaran: ' + document.getElementById('total_price').value;
+                document.getElementById('confirmTotalPrice').innerText = 'Jumlah Pembayaran: ' + document
+                    .getElementById('total_price').value;
 
                 // Show the modal
-                const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
-                confirmationModal.show();
+                // const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+                // confirmationModal.show();
+                name = document.getElementById('name').value
+                phone = document.getElementById('phone').value
+                total_price = document.getElementById('total_price').value
+
+                $.ajax({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
+                    },
+                    type: 'POST',
+                    url: '{{ route('saveOrder') }}',
+                    data: {
+                        "_token": "{{ csrf_token() }}",
+                        name: name,
+                        phone: phone,
+                        total_price: total_price,
+                    },
+                    success: function(data) {
+                        snapToken = data.token
+                        orderCode = data.order_code
+                        document.getElementById('snap-token').value = snapToken
+                        window.snap.pay(snapToken, {
+                            onSuccess: function(result) {
+                                alert('Berhasil')
+                                window.location.href = '/success/'+orderCode
+
+                            },
+                            onPending: function(result) {
+
+                            },
+                            onError: function(result) {
+
+                            },
+                            onClose: function(result) {
+
+                            },
+                        });
+                    },
+                    error: function(e) {
+                        console.log(e);
+                    }
+                });
+
             } else {
                 alert('Please fill in all fields');
             }
         });
 
-        document.getElementById('confirmButton').addEventListener('click', function () {
-            document.getElementById('orderForm').submit();
-        });
+        // document.getElementById('confirmButton').addEventListener('click', function() {
+        //     document.getElementById('orderForm').submit();
+        // });
     </script>
 </body>
 
