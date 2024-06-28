@@ -376,4 +376,14 @@ class ClientController extends Controller
 
         return view('client.about', $data);
     }
+
+    public function getTransaksi()
+    {
+
+        $get_data = Order::all();
+        // dd($get_data);
+        $json = json_decode(json_encode($get_data));
+        return response()->json(['status' => 'success', 'result' => $json]);
+    }
+
 }

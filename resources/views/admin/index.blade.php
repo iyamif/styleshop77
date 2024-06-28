@@ -84,6 +84,7 @@
                     <th>Order Code</th>
                     <th>Name</th>
                     <th>Total</th>
+                    <th>Status Payment</th>
                     <th>Status</th>
                     <th width="20%">Action</th>
                 </tr>
@@ -95,6 +96,13 @@
                     <td>{{ $row->order_code }}</td>
                     <td>{{ $row->name }}</td>
                     <td>${{ $row->total }}</td>
+                    @if( $row->status_payment == paid)
+                    <td>
+                      <span class="badge bg-warning">Sudah di Bayar</span>
+                      @elseif( $row->status_payment == unpaid)
+                      <span class="badge bg-warning">Belum di Bayar</span>
+                    </td>
+                  <!--  <td>${{ $row->status_payment }}</td> -->
                     <td>
                       @if($row->status == 0)
                         <span class="badge bg-warning">Unprocessed</span>

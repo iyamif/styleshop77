@@ -21,3 +21,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::post('/styleshop-callback', [ClientController::class, 'callback']);
+Route::get('/get_transaksi',[ClientController::class, 'getTransaksi']);
