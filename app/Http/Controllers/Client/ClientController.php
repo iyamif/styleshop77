@@ -197,7 +197,7 @@ class ClientController extends Controller
 
     //bypass
     public function orderPayment(Request $request){
-        $name = $request->name;
+        $name = $request->username;
         $phone = $request->phone;
         $total_price = $request->total_price;
         return view('client.order-payment',compact('name', 'phone','total_price'));
