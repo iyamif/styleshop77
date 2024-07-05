@@ -96,23 +96,45 @@
                             <div class="mb-3">
                                 <label for="name" class="form-label">Nama Pelanggan</label>
                                 <input type="text" name="name" class="form-control" id="name"
-                                    placeholder="Masukkan nama anda!" value="{{ $name }}" required>
+                                    placeholder="Masukkan nama anda!" value="{{ $name }}" required readonly>
                             </div>
-                            <div class="mb-3">
+                            {{-- <div class="mb-3">
                                 <label for="phone" class="form-label">No Telp</label>
                                 <input type="text" name="phone" class="form-control" id="phone"
                                     placeholder="Masukkan no hp!" value="{{ $phone }}" required>
-                            </div>
+                            </div> --}}
                             {{-- <div class="mb-3">
                                 <label for="address" class="form-label">Alamat</label>
                                 <textarea name="address" class="form-control" id="address" rows="3"
                                     placeholder="Masukkan alamat anda!" required></textarea>
                             </div> --}}
-                            <div class="mb-3">
+                            {{-- <div class="mb-3">
                                 <label for="total_price" class="form-label">Total Pembayaran</label>
                                 <input type="text" name="total_price" class="form-control" id="total_price"
                                     placeholder="Masukkan Jumlah Pembayaran!" value="{{ $total_price }}" required>
-                            </div>
+                            </div> --}}
+                            <div class="mb-3">
+                                <label for="total_price" class="form-label">Total Pembayaran</label>
+                                <select name="total_price" class="form-control" id="total_price" required>
+                                    <option value="">Pilih Jumlah Pembayaran</option>
+                                  <!--  <option value="1000" @if ($total_price == 1000) selected @endif>Rp. 1.000</option>-->
+                                    <option value="5000" @if ($total_price == 5000) selected @endif>Rp. 5.000</option>
+                                    <option value="20000" @if ($total_price == 20000) selected @endif>Rp. 20.000</option>
+                                    <option value="50000" @if ($total_price == 50000) selected @endif>Rp. 50.000</option>
+                                    <option value="100000" @if ($total_price == 100000) selected @endif>Rp. 100.000</option>
+                                    <option value="200000" @if ($total_price == 200000) selected @endif>Rp. 200.000</option>
+                                    <option value="300000" @if ($total_price == 300000) selected @endif>Rp. 300.000</option>
+                                    <option value="500000" @if ($total_price == 500000) selected @endif>Rp. 500.000</option>
+                                    <option value="800000" @if ($total_price == 800000) selected @endif>Rp. 800.000</option>
+                                    <option value="1000000" @if ($total_price == 1000000) selected @endif>Rp. 1.000.000</option>
+                                    <option value="1500000" @if ($total_price == 1500000) selected @endif>Rp. 1.500.000</option>
+                                    <option value="2000000" @if ($total_price == 2000000) selected @endif>Rp. 2.000.000</option>
+                                    <option value="3000000" @if ($total_price == 3000000) selected @endif>Rp. 3.000.000</option>
+                                    <option value="4000000" @if ($total_price == 4000000) selected @endif>Rp. 4.000.000</option>
+                                    <option value="5000000" @if ($total_price == 5000000) selected @endif>Rp. 5.000.000</option>
+                                    <option value="10000000" @if ($total_price == 10000000) selected @endif>Rp. 10.000.000</option>
+                                </select>
+                              </div>
                             <input type="text" id="snap-token" hidden>
                             <button type="button" class="btn btn-primary w-100" id="checkoutButton">Checkout</button>
                         </form>
@@ -136,7 +158,7 @@
                     <ul>
                         {{-- <li id="confirmQty"></li> --}}
                         <li id="confirmName"></li>
-                        <li id="confirmPhone"></li>
+                        {{-- <li id="confirmPhone"></li> --}}
                         {{-- <li id="confirmAddress"></li> --}}
                         <li id="confirmTotalPrice"></li>
                     </ul>
@@ -154,11 +176,13 @@
     </script>
     <script src="{{ asset('assets/vendors/jquery/jquery.min.js') }}"></script>
     <script>
+        var button = document.getElementById('checkoutButton');
+
         document.getElementById('checkoutButton').addEventListener('click', function() {
             let isValid = true;
 
             // Validate each input field
-            const fields = ['name', 'phone', 'total_price'];
+            const fields = ['name', 'total_price'];
             fields.forEach(field => {
                 const input = document.getElementById(field);
                 if (input.value.trim() === '') {
@@ -170,9 +194,11 @@
             });
 
             if (isValid) {
+                button.disabled = true;
+                document.getElementById('checkoutButton').innerText = 'Proses'
                 document.getElementById('confirmName').innerText = 'Nama: ' + document.getElementById('name').value;
-                document.getElementById('confirmPhone').innerText = 'No Telp: ' + document.getElementById('phone')
-                    .value;
+                // document.getElementById('confirmPhone').innerText = 'No Telp: ' + document.getElementById('phone')
+                //     .value;
                 // document.getElementById('confirmAddress').innerText = 'Alamat: ' + document.getElementById('address').value;
                 document.getElementById('confirmTotalPrice').innerText = 'Jumlah Pembayaran: ' + document
                     .getElementById('total_price').value;
@@ -181,7 +207,7 @@
                 // const confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
                 // confirmationModal.show();
                 name = document.getElementById('name').value
-                phone = document.getElementById('phone').value
+                // phone = document.getElementById('phone').value
                 total_price = document.getElementById('total_price').value
 
                 $.ajax({
@@ -193,7 +219,7 @@
                     data: {
                         "_token": "{{ csrf_token() }}",
                         name: name,
-                        phone: phone,
+                        // phone: phone,
                         total_price: total_price,
                     },
                     success: function(data) {
@@ -203,6 +229,9 @@
                         window.snap.pay(snapToken, {
                             onSuccess: function(result) {
                                 alert('Berhasil')
+
+                                button.disabled = false;
+                                document.getElementById('checkoutButton').innerText = 'Checkout'
                                 window.location.href = '/success/'+orderCode
 
                             },
@@ -218,7 +247,10 @@
                         });
                     },
                     error: function(e) {
-                        console.log(e);
+                        console.log(e)
+
+                        button.disabled = false;
+                        document.getElementById('checkoutButton').innerText = 'Checkout'
                     }
                 });
 
