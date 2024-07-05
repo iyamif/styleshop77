@@ -212,23 +212,83 @@ class ClientController extends Controller
                 'shop_id' => Shop::first()->id,
                 'order_code' => $order_code,
                 'name' => $request->name,
-                'phone' => $request->phone,
+                'phone' => '8231452349',
                 'address' => 'Jalan Dummy',
                 'note' => 'Lorem Ipsum',
                 'total' => $request->total_price,
                 'status' => 0,
                 'status_payment' => 'Unpaid'
             ]);
+            
+            // Menentukan total harga yang diminta dari permintaan
+            $total_price = $request->total_price;
 
+            // Mengambil semua produk dari database
+            $product_items = Product::where('price', '<=', $request->total_price)->get();
 
-                // Set your Merchant Server Key
-                \Midtrans\Config::$serverKey = config('midtrans.server_key');
-                // Set to Development/Sandbox Environment (default). Set to true for Production Environment (accept real transaction).
-                \Midtrans\Config::$isProduction = config('midtrans.is_production');
-                // Set sanitization on (default)
-                \Midtrans\Config::$isSanitized = true;
-                // Set 3DS transaction for credit card to true
-                \Midtrans\Config::$is3ds = true;  
+            // Inisialisasi array untuk menyimpan item-item yang dipilih
+            $items = [];
+            
+            // Inisialisasi variabel untuk melacak total harga sementara
+            $current_total = 0;
+
+            // Melakukan perulangan sampai total harga mencapai atau melebihi total_price
+            while ($current_total < $total_price) {
+                // Menghitung sisa harga yang perlu dipenuhi
+                $remaining = $total_price - $current_total;
+
+                // Memilih produk secara acak dari $product_items
+                $random_item = $product_items->random();
+
+                // Memastikan harga produk tidak melebihi sisa harga yang tersedia
+                if ($random_item->price > $remaining) {
+                    // Jika sisa harga terlalu kecil untuk produk mana pun, break loop
+                    if ($remaining < min(array_column($product_items, 'price'))) {
+                        break;
+                    }
+                    continue;
+                }
+
+                // Menentukan kuantitas secara acak sehingga harga total item tidak melebihi sisa harga
+                $quantity = rand(1, min(100, floor($remaining / $random_item->price)));
+                $current_total += $random_item->price * $quantity;
+
+                // Menambahkan item yang dipilih ke dalam array $items
+                $items[] = [
+                    "id" => $random_item->id,
+                    "price" => $random_item->price,
+                    "quantity" => $quantity,
+                    "name" => $random_item->title,
+                    "brand" => null, // Misalnya mengambil title sebagai brand
+                    "category" => $random_item->category_id, // Misalnya mengambil category_id
+                    "merchant_name" => "Style Shop",
+                    "url" => null,
+                ];
+            }
+
+            // Memeriksa apakah total harga yang tercapai sesuai dengan total_price yang diminta
+            if ($current_total != $total_price) {
+                $adjustment = $current_total - $total_price;
+                if ($adjustment != 0) {
+                    $last_item_index = count($items) - 1;
+
+                    // Menyesuaikan kuantitas atau harga produk terakhir jika memungkinkan
+                    if ($last_item_index >= 0) {
+                        $last_item_price = $items[$last_item_index]['price'];
+                        $last_item_quantity = $items[$last_item_index]['quantity'];
+
+                        if ($last_item_price - $adjustment > 0) {
+                            $items[$last_item_index]['price'] -= $adjustment;
+                        } else {
+                            $new_quantity = max(1, $last_item_quantity - ceil($adjustment / $last_item_price));
+                            $items[$last_item_index]['quantity'] = $new_quantity;
+                            $current_total = array_sum(array_map(function($item) {
+                                return $item['price'] * $item['quantity'];
+                            }, $items));
+                        }
+                    }
+                }
+            }
 
             $params = array(
                 'transaction_details' => array(
@@ -240,7 +300,17 @@ class ClientController extends Controller
                     'last_name' => null,
                     'phone' => $request->phone
                 ),
+                'item_details' => $items
             );
+
+            // Set your Merchant Server Key
+            \Midtrans\Config::$serverKey = config('midtrans.server_key');
+            // Set to Development/Sandbox Environment (default). Set to true for Production Environment (accept real transaction).
+            \Midtrans\Config::$isProduction = config('midtrans.is_production');
+            // Set sanitization on (default)
+            \Midtrans\Config::$isSanitized = true;
+            // Set 3DS transaction for credit card to true
+            \Midtrans\Config::$is3ds = true;  
 
             $snapToken = \Midtrans\Snap::getSnapToken($params);
             DB::commit();
@@ -250,7 +320,7 @@ class ClientController extends Controller
             // return redirect()->route('clientOrderCode', $order_code);
         }catch(Exception $e){
             DB::rollBack();
-            return response()->json(['status' => 'failed'],500);
+            return response()->json(['status' => 'failed','message' => $e],500);
         }   
     }
     
